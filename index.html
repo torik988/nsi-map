@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carte OpenStreetMap avec Firebase</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 100%;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+     <style>
+        #map {
+            height: 100%;
+        }
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        function initMap() {
+            const map = L.map('map').setView([-22.2758, 166.458], 10);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            loadMarkers(map);
+
+            map.on('click', function(e) {
+                const description = prompt("Entrez une description pour ce point :");
+                if (description) {
+                    const marker = addMarker(e.latlng, description, map);
+                    saveMarker(e.latlng, description);
+                }
+            });
+        }
+
+        function addMarker(location, description, map) {
+            const marker = L.marker(location).addTo(map)
+                .bindPopup(description).openPopup();
+            return marker;
+        }
+
+        
+        function saveMarker(location, description) {
+            const markers = JSON.parse(localStorage.getItem('markers')) || [];
+            markers.push({ lat: location.lat, lng: location.lng, description: description });
+            localStorage.setItem('markers', JSON.stringify(markers));
+        }
+ 
+        function loadMarkers(map) {
+            const markers = JSON.parse(localStorage.getItem('markers')) || [];
+            markers.forEach(marker => {
+                addMarker([marker.lat, marker.lng], marker.description, map);
+            });
+        }
+
+        initMap();
+    </script>
+</body>
+</html>
