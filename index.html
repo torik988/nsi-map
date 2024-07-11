@@ -32,6 +32,24 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
     <script>
+        <script type="module">
+  
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyC4zI_tTq9gQNzizOujXGX-4SSgJfaEqGM",
+    authDomain: "projet-nsi-c921a.firebaseapp.com",
+    databaseURL: "https://projet-nsi-c921a-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "projet-nsi-c921a",
+    storageBucket: "projet-nsi-c921a.appspot.com",
+    messagingSenderId: "832002811301",
+    appId: "1:832002811301:web:50f4d3f10f5b683281b44c",
+    measurementId: "G-CYLYLXGNJH"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
         function initMap() {
             const map = L.map('map').setView([-22.2758, 166.458], 10);
 
