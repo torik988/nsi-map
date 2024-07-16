@@ -3,40 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projet Nsi 1</title>
+    <title>Carte OpenStreetMap avec Local Storage</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         #map {
-            height: 100%;
+            height: 100vh;
         }
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
+            font-family: Arial, sans-serif;
         }
+        #legend {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000; 
+        }
+        .color-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+        }
+        .blue { background: blue; }
+        .red { background: red; }
+        .green { background: green; }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="legend">
+        <div class="color-option">
+            <div class="color-box blue"></div>Barrage
+        </div>
+        <div class="color-option">
+            <div class="color-box red"></div>Point dangereux à éviter
+        </div>
+        <div class="color-option">
+            <div class="color-box green"></div>Autre
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyC4zI_tTq9gQNzizOujXGX-4SSgJfaEqGM",
-            authDomain: "projet-nsi-c921a.firebaseapp.com",
-            databaseURL: "https://projet-nsi-c921a-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "projet-nsi-c921a",
-            storageBucket: "projet-nsi-c921a.appspot.com",
-            messagingSenderId: "832002811301",
-            appId: "1:832002811301:web:50f4d3f10f5b683281b44c",
-            measurementId: "G-CYLYLXGNJH"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
+    <script>
 
         function initMap() {
             const map = L.map('map').setView([-22.2758, 166.458], 10);
@@ -45,36 +65,53 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            loadMarkers(map);
+            loadMarkers(map); 
 
             map.on('click', function(e) {
                 const description = prompt("Entrez une description pour ce point :");
-                if (description) {
-                    const marker = addMarker(e.latlng, description, map);
-                    saveMarker(e.latlng, description);
+                const color = prompt("Entrez une couleur pour ce point (rouge, vert, bleu) :").toLowerCase();
+                if (description && (color === 'rouge' || color === 'vert' || color === 'bleu')) {
+                    const marker = addMarker(e.latlng, description, color, map);
+                    saveMarker(e.latlng, description, color); 
+                } else {
+                    alert("Veuillez entrer une couleur valide (rouge, vert, bleu).");
                 }
             });
         }
 
-        function addMarker(location, description, map) {
-            const marker = L.marker(location).addTo(map)
+
+        function addMarker(location, description, color, map) {
+            let colorCode;
+            switch (color) {
+                case 'rouge': colorCode = 'red'; break;
+                case 'vert': colorCode = 'green'; break;
+                case 'bleu': colorCode = 'blue'; break;
+            }
+            const marker = L.circleMarker(location, { color: colorCode, radius: 8 }).addTo(map)
                 .bindPopup(description).openPopup();
             return marker;
         }
 
-        function saveMarker(location, description) {
-            const markers = JSON.parse(localStorage.getItem('markers')) || [];
-            markers.push({ lat: location.lat, lng: location.lng, description: description });
-            localStorage.setItem('markers', JSON.stringify(markers));
+        function saveMarker(location, description, color) {
+            const markers = JSON.parse(localStorage.getItem('markers')) || []; 
+            markers.push({
+                lat: location.lat,
+                lng: location.lng,
+                description: description,
+                color: color
+            });
+            localStorage.setItem('markers', JSON.stringify(markers)); 
+            console.log("Marker added: ", { lat: location.lat, lng: location.lng, description, color });
         }
 
         function loadMarkers(map) {
-            const markers = JSON.parse(localStorage.getItem('markers')) || [];
+            const markers = JSON.parse(localStorage.getItem('markers')) || []; 
             markers.forEach(marker => {
-                addMarker([marker.lat, marker.lng], marker.description, map);
+                addMarker([marker.lat, marker.lng], marker.description, marker.color, map);
             });
         }
 
+        // Initialisation de la carte
         initMap();
     </script>
 </body>
