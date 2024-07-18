@@ -39,6 +39,15 @@
         .blue { background: blue; }
         .red { background: red; }
         .green { background: green; }
+        .filter-button {
+            display: block;
+            margin: 5px 0;
+            padding: 5px;
+            cursor: pointer;
+            background-color: #eee;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+        }
     </style>
 </head>
 <body>
@@ -53,19 +62,33 @@
         <div class="color-option">
             <div class="color-box green"></div>Autre
         </div>
+        <button class="filter-button" onclick="filterMarkers('blue')">Afficher Barrage</button>
+        <button class="filter-button" onclick="filterMarkers('red')">Afficher Point dangereux à éviter</button>
+        <button class="filter-button" onclick="filterMarkers('green')">Afficher Autre</button>
+        <button class="filter-button" onclick="filterMarkers('all')">Afficher Tous</button>
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
+        let map;
+        let allMarkers = [];
 
         function initMap() {
-            const map = L.map('map').setView([-22.2758, 166.458], 10);
+            const bounds = L.latLngBounds([[-23.5, 164.5], [-19.5, 168.5]]);
+            map = L.map('map', {
+                center: [-22.2758, 166.458],
+                zoom: 10,
+                maxBounds: bounds,
+                maxBoundsViscosity: 1.0,
+                minZoom: 8,
+                maxZoom: 18.4,
+            });
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
 
-            loadMarkers(map); 
+            loadMarkers();
 
             map.on('click', function(e) {
                 const description = prompt("Entrez une description pour ce point :");
@@ -79,7 +102,6 @@
             });
         }
 
-
         function addMarker(location, description, color, map) {
             let colorCode;
             switch (color) {
@@ -89,29 +111,38 @@
             }
             const marker = L.circleMarker(location, { color: colorCode, radius: 8 }).addTo(map)
                 .bindPopup(description).openPopup();
+            allMarkers.push({ marker, color: colorCode });
             return marker;
         }
 
         function saveMarker(location, description, color) {
-            const markers = JSON.parse(localStorage.getItem('markers')) || []; 
+            const markers = JSON.parse(localStorage.getItem('markers')) || [];
             markers.push({
                 lat: location.lat,
                 lng: location.lng,
                 description: description,
                 color: color
             });
-            localStorage.setItem('markers', JSON.stringify(markers)); 
-            console.log("Marker added: ", { lat: location.lat, lng: location.lng, description, color });
+            localStorage.setItem('markers', JSON.stringify(markers));
         }
 
-        function loadMarkers(map) {
-            const markers = JSON.parse(localStorage.getItem('markers')) || []; 
+        function loadMarkers() {
+            const markers = JSON.parse(localStorage.getItem('markers')) || [];
             markers.forEach(marker => {
-                addMarker([marker.lat, marker.lng], marker.description, marker.color, map);
+                addMarker({ lat: marker.lat, lng: marker.lng }, marker.description, marker.color, map);
             });
         }
 
-        // Initialisation de la carte
+        function filterMarkers(color) {
+            allMarkers.forEach(({ marker, color: markerColor }) => {
+                if (color === 'all' || markerColor === color) {
+                    marker.addTo(map);
+                } else {
+                    map.removeLayer(marker);
+                }
+            });
+        }
+
         initMap();
     </script>
 </body>
